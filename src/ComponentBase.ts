@@ -80,6 +80,11 @@ abstract class ComponentBase<P extends React.Props<any>, S extends Object> exten
 
     private _isMounted = false;
 
+    private _isPaused = false;
+    private _queuedSubscriptionCallbacks: { callback: SubscriptionCallbackFunction, keys?: string[] }[] = [];
+    private _buildStateQueued = false;
+    private _renderQueued = false;
+
     constructor(props: P) {
         super(props);
 
@@ -100,6 +105,45 @@ abstract class ComponentBase<P extends React.Props<any>, S extends Object> exten
                 return null;
             }
         });
+    }
+
+    pause(): void {
+        if (this._isPaused) {
+            return;
+        }
+
+        this._isPaused = true;
+        this._buildStateQueued = false;
+        this._queuedSubscriptionCallbacks = [];
+        this._renderQueued = false;
+    }
+
+    resume(): void {
+        if (!this._isPaused) {
+            return;
+        }
+
+        this._isPaused = false;
+
+        if (this._buildStateQueued) {
+            this._buildStateQueued = false;
+
+            let newState = this._buildStateWithAutoSubscriptions(this.props, false);
+            if (newState && !_.isEmpty(newState)) {
+                this.setState(newState);
+            }
+        }
+
+        const toFire = this._queuedSubscriptionCallbacks;
+        this._queuedSubscriptionCallbacks = [];
+        _.each(toFire, item => {
+            item.callback(item.keys);
+        });
+
+        if (this._renderQueued) {
+            this._renderQueued = false;
+            this.forceUpdate();
+        }
     }
 
     protected _initStoreSubscriptions(): StoreSubscription<S>[] {
@@ -137,6 +181,11 @@ abstract class ComponentBase<P extends React.Props<any>, S extends Object> exten
         });
 
         if (!_.isEqual(this.props, nextProps)) {
+            if (this._isPaused) {
+                this._buildStateQueued = true;
+                return;
+            }
+
             let newState = this._buildStateWithAutoSubscriptions(nextProps, false);
             if (newState && !_.isEmpty(newState)) {
                 this.setState(newState);
@@ -167,8 +216,19 @@ abstract class ComponentBase<P extends React.Props<any>, S extends Object> exten
     }
 
     shouldComponentUpdate(nextProps: P, nextState: S): boolean {
-        return !Options.shouldComponentUpdateComparator(this.state, nextState) ||
+        const should = !Options.shouldComponentUpdateComparator(this.state, nextState) ||
                 !Options.shouldComponentUpdateComparator(this.props, nextProps);
+
+        if (should) {
+            if (this._isPaused) {
+                this._renderQueued = true;
+                return false;
+            }
+
+            this._renderQueued = false;
+        }
+       
+        return should;
     }
 
     isComponentMounted(): boolean {
@@ -269,7 +329,7 @@ abstract class ComponentBase<P extends React.Props<any>, S extends Object> exten
         return !subscription.used;
     }
 
-    private _onSubscriptionChanged(subscription: StoreSubscription<S>, changedItem: any) {
+    private _onSubscriptionChanged(subscription: StoreSubscription<S>, changedKeys?: string[]) {
         // The only time we can get a subscription callback that's unmounted is after the component has already been
         // mounted and torn down, so this check can only catch that case (subscriptions living past the end of the
         // component's lifetime).
@@ -281,8 +341,30 @@ abstract class ComponentBase<P extends React.Props<any>, S extends Object> exten
 
         let nsubscription = subscription as StoreSubscriptionInternal<S>;
         if (nsubscription._callback) {
-            newState = nsubscription._callback(changedItem);
+            if (this._isPaused) {
+                let item = _.find(this._queuedSubscriptionCallbacks, i => i.callback === nsubscription._callback);
+                if (item) {
+                    if (changedKeys) {
+                        if (item.keys) {
+                            item.keys.push(...changedKeys);
+                        } else {
+                            item.keys = changedKeys;
+                        }
+                    }
+                } else {
+                    this._queuedSubscriptionCallbacks.push({ callback: nsubscription._callback, keys: changedKeys });
+                }
+                
+                return;
+            }
+
+            newState = nsubscription._callback(changedKeys);
         } else {
+            if (this._isPaused) {
+                this._buildStateQueued = true;
+                return;
+            }
+
             newState = this._buildStateWithAutoSubscriptions(this.props, false);
         }
 
@@ -295,6 +377,12 @@ abstract class ComponentBase<P extends React.Props<any>, S extends Object> exten
         if (!this.isComponentMounted()) {
             return;
         }
+
+        if (this._isPaused) {
+            this._buildStateQueued = true;
+            return;
+        }
+
         const newState = this._buildStateWithAutoSubscriptions(this.props, false);
         if (newState && !_.isEmpty(newState)) {
             this.setState(newState);
