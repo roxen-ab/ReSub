@@ -8,9 +8,9 @@
 
 'use strict';
 
-import assert = require('assert');
-import _ = require('./lodashMini');
-import React = require('react');
+import * as _ from './lodashMini';
+import * as assert from 'assert';
+import * as React from 'react';
 
 import Options from './Options';
 import { AutoSubscription, StoreBase } from './StoreBase';

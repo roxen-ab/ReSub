@@ -6,11 +6,11 @@
 * Shared basic types for ReSub.
 */
 
-import ComponentBaseI = require('./ComponentBase');
-import AutoSubscriptionsI = require('./AutoSubscriptions');
-import StoreBaseI = require('./StoreBase');
-import TypesI = require('./Types');
-import OptionsI = require('./Options');
+import * as ComponentBaseI from './ComponentBase';
+import * as AutoSubscriptionsI from './AutoSubscriptions';
+import * as StoreBaseI from './StoreBase';
+import * as TypesI from './Types';
+import * as OptionsI from './Options';
 
 export const ComponentBase = ComponentBaseI.default;
 

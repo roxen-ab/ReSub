@@ -9,7 +9,7 @@
 * have no other choice.
 */
 
-import _ = require('./lodashMini');
+import * as  _ from './lodashMini';
 
 // Limiting the interface since IE11 doesn't support much of it
 export interface Map<K, V> {

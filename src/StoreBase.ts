@@ -11,8 +11,8 @@
 * Stores can mark themselves as opt-out of the trigger-block logic for critical stores that must flow under all conditions.
 */
 
-import _ = require('./lodashMini');
-import assert = require('assert');
+import * as _ from './lodashMini';
+import * as assert from 'assert';
 
 import MapShim from './MapShim';
 import Options from './Options';

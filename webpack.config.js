@@ -2,10 +2,10 @@ var path = require('path');
 var webpack = require('webpack');
 
 var webpackConfig = {
-    entry: './tests/tests.ts',
+    entry: './resub.ts',
     
     output: {
-        filename: './ReSubTestsPack.js',
+        filename: './dist/resub.js',
     },
 
     resolve: {
@@ -23,7 +23,12 @@ var webpackConfig = {
             exclude: /node_modules/,
             loader: 'awesome-typescript-loader'
         }]
-    }  
+    },
+
+    // plugins: [
+    //     new webpack.optimize.OccurrenceOrderPlugin(),
+    //     new webpack.optimize.UglifyJsPlugin({ mangle: true, sourceMap: false })
+    // ]
 };
 
 module.exports = webpackConfig;

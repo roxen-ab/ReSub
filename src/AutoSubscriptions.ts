@@ -61,10 +61,10 @@
 // super.render, the descriptor's logic only applies until the end of that method, not the end of yours. This is why that functionality is
 // exposes as a function instead of a decorator.
 
-import _ = require('./lodashMini');
-import assert = require('assert');
+import * as _ from './lodashMini';
+import * as assert from 'assert';
 
-import Decorator = require('./Decorator');
+import * as Decorator from './Decorator';
 import Options from './Options';
 import { StoreBase } from './StoreBase';
 

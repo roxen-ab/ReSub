@@ -1,26 +1,27 @@
 {
     "compilerOptions": {
+        "importHelpers": true,
         "declaration": true,
-        "noResolve": false,
         "jsx": "react",
-        "module": "commonjs",
+        "strict": true,
+        "module": "amd",
+        "moduleResolution": "node",
         "target": "es5",
         "experimentalDecorators": true,
         "suppressImplicitAnyIndexErrors":  true,
         "outDir": "dist/",
+        "outFile": "dist/resub.js",
         "typeRoots": [
             "node_modules/@types"
         ],
-        
         "noImplicitAny": true,
         "noImplicitReturns": true,
         "noImplicitThis": true,
         "noUnusedLocals": true,
         "forceConsistentCasingInFileNames": true,
-        
         "strictNullChecks": true
     },
-    
+
     "exclude": [
         "dist",
         "node_modules"
